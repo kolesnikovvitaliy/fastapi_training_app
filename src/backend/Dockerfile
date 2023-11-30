@@ -4,7 +4,7 @@
 FROM python:3.12.0-slim-bullseye AS python-base
 ENV PYTHONUNBUFFERED=1 \
     PROJECT_NAME="trainig_app" \
-    WORKDIR_PROJECT="/backend" \
+    # WORKDIR_PROJECT="/backend" \
     PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=off \
     PIP_DISABLE_PIP_VERSION_CHECK=on \
@@ -13,13 +13,13 @@ ENV PYTHONUNBUFFERED=1 \
     POETRY_HOME="/opt/poetry" \
     POETRY_VIRTUALENVS_IN_PROJECT=true \
     POETRY_NO_INTERACTION=1 \
-    PYSETUP_PATH="/opt/pysetup" \
-    VENV_PATH="/opt/pysetup/.venv" \
+    PYSETUP_PATH="/backend" \
+    VENV_PATH="/backend/.venv" \
     MSSQL_ODBC_DATASOURCES="/etc/ODBCDataSources" \
     MSSQL_ODBC_INI="/etc/odbc.ini" \
     MSSQL_ODBC_INT="/etc/odbcinst.ini" \
-    MSSQL_DRIVER="/opt/mssql-tools18"
-    # MSSQL_MICROSOFT="/opt/microsoft" 
+    MSSQL_DRIVER="/opt/mssql-tools18" \
+    MSSQL_MICROSOFT="/opt/microsoft" 
 
 # prepend poetry, venv and mssql to path
 ENV PATH="$POETRY_HOME/bin:$VENV_PATH/bin:$MSSQL_DRIVER/bin:$PATH"
@@ -42,6 +42,7 @@ RUN curl -sSL https://install.python-poetry.org | POETRY_HOME=${POETRY_HOME} pyt
 
 # We copy our Python requirements here to cache them
 # and install only runtime deps using poetry
+
 WORKDIR $PYSETUP_PATH
 COPY ./pyproject.toml ./
 RUN poetry lock --no-update
@@ -107,6 +108,15 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 # poetry install dependens
+# WORKDIR $PYSETUP_PATH
+# RUN poetry lock --no-update
+# RUN poetry install --no-root --no-cache \
+#     && rm -rf ~/.cache/pypoetry/{cache,artifacts} \
+#     && apt-get clean \
+#     && apt-get purge -y --auto-remove \ 
+#     && rm -rf /var/lib/apt/lists/*
+
+
 WORKDIR $PYSETUP_PATH
 RUN poetry lock --no-update
 RUN poetry install --no-root --no-cache \
@@ -114,21 +124,19 @@ RUN poetry install --no-root --no-cache \
     && apt-get clean \
     && apt-get purge -y --auto-remove \ 
     && rm -rf /var/lib/apt/lists/*
-
-
-WORKDIR $WORKDIR_PROJECT
 COPY ./scripts scripts
 COPY ./training_app training_app
 COPY ./tests tests
-COPY ./main.py main.py
+# COPY ./main.py main.py
 
-RUN chmod +x ./scripts/start_venv.sh
+# RUN chmod +x ./scripts/start_venv.sh
 
-EXPOSE 8000
-ENTRYPOINT $WORKDIR_PROJECT/scripts/start_venv.sh $0 $@
+# EXPOSE 8000
+# ENTRYPOINT $WORKDIR_PROJECT/scripts/start_venv.sh $0 $@
 
-RUN adduser -u 5678 --disabled-password --gecos "" appuser && chown -R appuser /app
-USER appuser
+# RUN adduser -u 5678 --disabled-password --gecos "" appuser && chown -R appuser /app
+# USER appuser
 
 
-CMD ["uvicorn", "--reload", "training_app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# CMD ["uvicorn", "--reload", "training_app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["tail", "-f", "/dev/null"]
