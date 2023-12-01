@@ -3,7 +3,7 @@
 set -e
 
 # activate our virtual environment here
-. .venv/bin/activate
+. /backend/.venv/bin/activate
 
 # You can put other setup logic here
 

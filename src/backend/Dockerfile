@@ -52,9 +52,9 @@ RUN poetry install --only main --no-root --no-cache # respects \
     && apt-get purge -y --auto-remove \ 
     && rm -rf /var/lib/apt/lists/*
 
-###############################################
-# Build MSSQL-DRIVER
-###############################################
+# ###############################################
+# # Build MSSQL-DRIVER
+# ###############################################
 FROM python-base as builder-mssql-driver
 RUN buildDeps="build-essential" \
     && apt-get update \
@@ -108,7 +108,7 @@ RUN apt-get update \
     && apt-get purge -y --auto-remove \ 
     && rm -rf /var/lib/apt/lists/*
 
-# create worcdir
+# create workdir
 # poetry install dependens
 WORKDIR $WORKDIR_PROJECT
 RUN poetry lock --no-update
@@ -117,11 +117,13 @@ RUN poetry install --no-root --no-cache \
     && apt-get clean \
     && apt-get purge -y --auto-remove \ 
     && rm -rf /var/lib/apt/lists/*
-
 COPY ./scripts scripts
 COPY ./training_app training_app
 COPY ./tests tests
 COPY ./main.py main.py
+COPY ./__init__.py __init__.py
+COPY ./README.md README.md
+
 
 RUN chmod +x ./scripts/start_venv.sh
 
