@@ -9,6 +9,9 @@ readme = "README.md"
 python = "^3.12"
 fastapi = "^0.104.1"
 uvicorn = {extras = ["standard"], version = "^0.24.0.post1"}
+pendulum = "3.0.0b1"
+fastapi-cache2 = {extras = ["redis"], version = "^0.2.1"}
+
 
 
 [build-system]
