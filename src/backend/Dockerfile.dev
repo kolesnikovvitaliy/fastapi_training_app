@@ -1,0 +1,111 @@
+###############################################
+# Base Image
+###############################################
+FROM python:3.12.0-slim-bullseye AS python-base
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=off \
+    PIP_DISABLE_PIP_VERSION_CHECK=on \
+    PIP_DEFAULT_TIMEOUT=100 \
+    POETRY_VERSION=1.7.0  \
+    POETRY_HOME="/opt/poetry" \
+    POETRY_VIRTUALENVS_IN_PROJECT=true \
+    POETRY_NO_INTERACTION=1 \
+    PYSETUP_PATH="/backend" \
+    VENV_PATH="/backend/.venv" \
+    MSSQL_ODBC_DATASOURCES="/etc/ODBCDataSources" \
+    MSSQL_ODBC_INI="/etc/odbc.ini" \
+    MSSQL_ODBC_INT="/etc/odbcinst.ini" \
+    MSSQL_DRIVER="/opt/mssql-tools18" \
+    MSSQL_MICROSOFT="/opt/microsoft" 
+
+# prepend poetry, venv and mssql to path
+ENV PATH="$POETRY_HOME/bin:$VENV_PATH/bin:$MSSQL_DRIVER/bin:$PATH"
+RUN buildDeps="build-essential" \ 
+    && apt-get update -yqq && apt-get install -yqq --no-install-recommends \
+    curl \
+    apt-transport-https \
+    debconf-utils \
+    python3-dev \
+    gnupg2 \
+    gcc \
+    unixodbc-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+###############################################
+# Builder VENV_POETRY
+###############################################
+FROM python-base as builder-poetry
+
+# Install Poetry - respects $POETRY_VERSION & $POETRY_HOME
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+RUN curl -sSL https://install.python-poetry.org | POETRY_HOME=${POETRY_HOME} python3 - --version ${POETRY_VERSION} && \
+    chmod a+x /opt/poetry/bin/poetry
+
+# We copy our Python requirements here to cache them
+# and install only runtime deps using poetry
+WORKDIR $PYSETUP_PATH
+COPY ./pyproject.toml ./
+RUN poetry lock --no-update
+RUN poetry install --only main --no-root --no-cache # respects \ 
+    && rm -rf ~/.cache/pypoetry/{cache,artifacts}
+   
+# ###############################################
+# # Build MSSQL-DRIVER
+# ###############################################
+FROM python-base as builder-mssql-driver
+
+# Install mssql-tools18, msodbcsql18 $MSSQL_DRIVER, $MSSQL_MICROSOFT
+RUN curl https://packages.microsoft.com/keys/microsoft.asc | tee /etc/apt/trusted.gpg.d/microsoft.asc \
+    && curl https://packages.microsoft.com/config/debian/11/prod.list | tee /etc/apt/sources.list.d/mssql-release.list \ 
+    && apt-get update -yqq && ACCEPT_EULA=Y apt-get install -yqq \
+    msodbcsql18 \
+    mssql-tools18
+
+###############################################
+# Production Image
+###############################################
+FROM python-base as development
+
+LABEL maintainer="kolesnikovvitaliy <kolesnikovvitaliy@github.com>"
+
+# Copying mssql-driver config and poetry-venv into image
+COPY --from=builder-poetry $POETRY_HOME $POETRY_HOME
+COPY --from=builder-poetry $PYSETUP_PATH $PYSETUP_PATH
+COPY --from=builder-mssql-driver $MSSQL_DRIVER $MSSQL_DRIVER
+COPY --from=builder-mssql-driver $MSSQL_MICROSOFT $MSSQL_MICROSOFT
+COPY --from=builder-mssql-driver $MSSQL_ODBC_DATASOURCES $MSSQL_ODBC_DATASOURCES
+COPY --from=builder-mssql-driver $MSSQL_ODBC_INT $MSSQL_ODBC_INT
+COPY --from=builder-mssql-driver $MSSQL_ODBC_INI $MSSQL_ODBC_INI
+
+# add PATH for mssql-driver
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+RUN echo 'export PATH="$PATH:/opt/mssql-tools18/bin"' >> ~/.bashrc \
+    && source ~/.bashrc
+
+# Create workdir for training_app
+WORKDIR $PYSETUP_PATH
+RUN poetry lock --no-update
+RUN poetry install --no-root --no-cache \
+    && rm -rf ~/.cache/pypoetry/{cache,artifacts}
+COPY ./scripts scripts
+COPY ./training_app training_app
+COPY ./tests tests
+COPY ./main.py main.py
+COPY ./__init__.py __init__.py
+COPY ./README.md README.md
+RUN chmod +x ./scripts/start_venv.sh
+
+# # Create USER for prod
+# RUN groupadd --gid 1001 userapp \
+#     && useradd --uid 1001 --gid userapp --shell /bin/bash --create-home userapp
+
+# RUN chown -R userapp:userapp $PYSETUP_PATH
+# USER userapp
+
+EXPOSE 8000
+
+# start activate venv for training_app
+ENTRYPOINT $PYSETUP_PATH/scripts/start_venv.sh $0 $@
+
+CMD ["python", "main.py"]
