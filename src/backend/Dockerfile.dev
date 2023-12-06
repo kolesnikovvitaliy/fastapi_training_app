@@ -21,21 +21,18 @@ ENV PYTHONUNBUFFERED=1 \
 
 # prepend poetry, venv and mssql to path
 ENV PATH="$POETRY_HOME/bin:$VENV_PATH/bin:$MSSQL_DRIVER/bin:$PATH"
-RUN buildDeps="build-essential" \ 
-    && apt-get update -yqq && apt-get install -yqq --no-install-recommends \
-    curl \
-    apt-transport-https \
-    debconf-utils \
-    python3-dev \
-    gnupg2 \
-    gcc \
-    unixodbc-dev \
-    && rm -rf /var/lib/apt/lists/*
 
 ###############################################
 # Builder VENV_POETRY
 ###############################################
 FROM python-base as builder-poetry
+
+RUN buildDeps="build-essential" \ 
+    && apt-get update -yqq && apt-get install -yqq --no-install-recommends \
+    curl \
+    gcc \
+    python3-dev \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install Poetry - respects $POETRY_VERSION & $POETRY_HOME
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -55,6 +52,13 @@ RUN poetry install --only main --no-root --no-cache # respects \
 # ###############################################
 FROM python-base as builder-mssql-driver
 
+RUN buildDeps="build-essential" \ 
+    && apt-get update -yqq && apt-get install -yqq --no-install-recommends \
+    apt-transport-https \
+    curl \
+    gnupg2 \
+    && rm -rf /var/lib/apt/lists/*
+
 # Install mssql-tools18, msodbcsql18 $MSSQL_DRIVER, $MSSQL_MICROSOFT
 RUN curl https://packages.microsoft.com/keys/microsoft.asc | tee /etc/apt/trusted.gpg.d/microsoft.asc \
     && curl https://packages.microsoft.com/config/debian/11/prod.list | tee /etc/apt/sources.list.d/mssql-release.list \ 
@@ -68,6 +72,11 @@ RUN curl https://packages.microsoft.com/keys/microsoft.asc | tee /etc/apt/truste
 FROM python-base as development
 
 LABEL maintainer="kolesnikovvitaliy <kolesnikovvitaliy@github.com>"
+
+RUN buildDeps="build-essential" \ 
+    && apt-get update -yqq && apt-get install -yqq --no-install-recommends \
+    unixodbc-dev \
+    && rm -rf /var/lib/apt/lists/*
 
 # Copying mssql-driver config and poetry-venv into image
 COPY --from=builder-poetry $POETRY_HOME $POETRY_HOME

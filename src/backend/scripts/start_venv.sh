@@ -6,6 +6,6 @@ set -e
 . /backend/.venv/bin/activate
 
 # You can put other setup logic here
-
+cd /backend && poetry lock
 # Evaluating passed command:
 exec "$@"

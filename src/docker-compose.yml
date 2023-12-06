@@ -8,7 +8,7 @@ services:
       - .env
     build:
       context: ./backend/
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
     restart: on-failure
     volumes:
       - ./backend/scripts:/backend/scripts
@@ -21,34 +21,34 @@ services:
       - training_app_venv:/backend/.venv
     ports:
       - 8000:8000
-    depends_on:
-      mssql_db:
-        condition: service_healthy
+    # depends_on:
+    #   mssql_db:
+    #     condition: service_healthy
 
-  mssql_db:
-    container_name: mssql_db
-    hostname: mssql_db
-    image: mcr.microsoft.com/mssql/server:2022-latest
-    #image: mcr.microsoft.com/mssql/server:2017-CU11-ubuntu
-    restart: always
-    environment:
-      ACCEPT_EULA: "Y"
-      SA_PASSWORD: "TestTest12345678"
-      # MSSQL_PID: "Expres"
-    ports:
-      - 1433:1433
-    volumes:
-      - mssql_data:/var/opt/mssql/
-    healthcheck:
-          test:
-              [
-                  "CMD-SHELL",
-                  "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P TestTest12345678 -Q 'SELECT 1' || exit 1"
-              ]
-          interval: 10s
-          retries: 10
-          start_period: 10s
-          timeout: 3s
+  # mssql_db:
+  #   container_name: mssql_db
+  #   hostname: mssql_db
+  #   image: mcr.microsoft.com/mssql/server:2022-latest
+  #   #image: mcr.microsoft.com/mssql/server:2017-CU11-ubuntu
+  #   restart: always
+  #   environment:
+  #     ACCEPT_EULA: "Y"
+  #     SA_PASSWORD: "TestTest12345678"
+  #     # MSSQL_PID: "Expres"
+  #   ports:
+  #     - 1433:1433
+  #   volumes:
+  #     - mssql_data:/var/opt/mssql/
+  #   healthcheck:
+  #         test:
+  #             [
+  #                 "CMD-SHELL",
+  #                 "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P TestTest12345678 -Q 'SELECT 1' || exit 1"
+  #             ]
+  #         interval: 10s
+  #         retries: 10
+  #         start_period: 10s
+  #         timeout: 3s
 volumes:
   training_app_venv:
     driver_opts:
@@ -56,9 +56,9 @@ volumes:
       type: none
       # TODO: Need to create a file ./backend/.venv/
       device: ./backend/.venv/
-  mssql_data:
-    driver_opts:
-      o: bind
-      type: none
-      # TODO: Need to create a file fastapi_training_app/.docker/backend/mssql_data: sudo chown -R 10001:0 fastapi_training_app/.docker
-      device: ../.docker/backend/mssql_data/
+  # mssql_data:
+  #   driver_opts:
+  #     o: bind
+  #     type: none
+  #     # TODO: Need to create a file fastapi_training_app/.docker/backend/mssql_data: sudo chown -R 10001:0 fastapi_training_app/.docker
+  #     device: ../.docker/backend/mssql_data/
