@@ -103,7 +103,7 @@ COPY ./tests tests
 COPY ./main.py main.py
 COPY ./__init__.py __init__.py
 COPY ./README.md README.md
-RUN chmod +x ./scripts/start_venv.sh
+RUN chmod +x ./scripts/activate-venv.sh
 
 # # Create USER for prod
 # RUN groupadd --gid 1001 userapp \
@@ -115,6 +115,6 @@ RUN chmod +x ./scripts/start_venv.sh
 EXPOSE 8000
 
 # start activate venv for training_app
-ENTRYPOINT $PYSETUP_PATH/scripts/start_venv.sh $0 $@
+ENTRYPOINT $PYSETUP_PATH/scripts/activate-venv.sh $0 $@
 
-CMD ["python", "main.py"]
+CMD ["poetry", "run", "python", "main.py"]
