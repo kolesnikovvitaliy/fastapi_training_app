@@ -60,5 +60,5 @@ volumes:
     driver_opts:
       o: bind
       type: none
-      # TODO: Need to create a file fastapi_training_app/.docker/backend/mssql_data: sudo chown -R 10001:0 fastapi_training_app/.docker
+      # TODO: Need to create a file fastapi_training_app/.docker_data/backend/mssql_data: sudo chown -R 10001:0 fastapi_training_app/.docker_data
       device: ../.docker_data/backend/mssql_data/

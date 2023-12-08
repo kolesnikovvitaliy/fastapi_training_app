@@ -5,7 +5,7 @@ set -e
 # activate our virtual environment here
 . /backend/.venv/bin/activate
 
-# You can put other setup logic here
-cd /backend && poetry lock
+# run poetry activate dependencies for save in localmaсhine
+cd /backend && poetry lock --no-update
 # Evaluating passed command:
 exec "$@"
