@@ -55,7 +55,7 @@ volumes:
       o: bind
       type: none
       # TODO: Need to create a file ./backend/.venv/
-      device: ./backend/.venv/
+      device: ../.docker_data/backend/.venv/
   mssql_data:
     driver_opts:
       o: bind
