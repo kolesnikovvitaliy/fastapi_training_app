@@ -26,7 +26,7 @@ services:
         condition: service_healthy
   mssql_db:
     container_name: mssql_db
-    hostname: mssql_db
+    hostname: ${DB_HOST}
     image: mssql_db
     env_file:
       - ./.env
@@ -35,15 +35,15 @@ services:
       dockerfile: Dockerfile
     restart: always
     ports:
-      - 1433:1433
+      - ${DB_PORT}:1433
     volumes:
-      - ../.docker_data/backend/config_mssql.log:/opt/app/config.log
+      - ${DOCKER_DATA_PATH}/config_mssql.log:/opt/app/config.log
       - mssql_data:/var/opt/mssql/
     healthcheck:
           test:
               [
                   "CMD-SHELL",
-                  "/opt/mssql-tools/bin/sqlcmd -S ${DB_HOST} -U ${NEW_USER} -P ${NEW_USER_PASSWORD} -Q 'SELECT 1' || exit 1"
+                  "/opt/mssql-tools/bin/sqlcmd -S ${DB_HOST} -U ${DB_USER} -P ${DB_PASSWORD} -Q 'SELECT 1' || exit 1"
               ]
           interval: 10s
           retries: 10
@@ -54,11 +54,11 @@ volumes:
     driver_opts:
       o: bind
       type: none
-      # TODO: Need to create a file ./backend/.venv/
-      device: ./backend/.venv/
+      # TODO: Need to create a file file fastapi_training_app/.docker_data/backend/.venv/
+      device: ${DOCKER_DATA_PATH}/.venv/
   mssql_data:
     driver_opts:
       o: bind
       type: none
       # TODO: Need to create a file fastapi_training_app/.docker_data/backend/mssql_data: sudo chown -R 10001:0 fastapi_training_app/.docker_data
-      device: ../.docker_data/backend/mssql_data/
+      device: ${DOCKER_DATA_PATH}/mssql_data/
