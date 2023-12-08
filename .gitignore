@@ -102,4 +102,5 @@ ENV/
 .vscode
 mssql_data
 .docker_data
+rm_and_create_file.sh
 
