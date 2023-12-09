@@ -11,19 +11,23 @@ services:
       dockerfile: Dockerfile.dev
     restart: on-failure
     volumes:
-      - ./backend/scripts:/backend/scripts
-      - ./backend/training_app:/backend/training_app
-      - ./backend/tests:/backend/tests
-      - ./backend/main.py:/backend/main.py
-      - ./backend/poetry.lock:/backend/poetry.lock
-      - ./backend/pyproject.toml:/backend/pyproject.toml
-      - ./backend/README.md:/backend/README.md
-      - training_app_venv:/backend/.venv
+      - ./${LOCAL_APP_PATH}/scripts:/${PATH_APP_IN_DOCKER}/scripts
+      - ./${LOCAL_APP_PATH}/db:/${PATH_APP_IN_DOCKER}/db
+      - ./${LOCAL_APP_PATH}/training_app:/${PATH_APP_IN_DOCKER}/training_app
+      - ./${LOCAL_APP_PATH}/tests:/${PATH_APP_IN_DOCKER}/tests
+      - ./${LOCAL_APP_PATH}/main.py:/${PATH_APP_IN_DOCKER}/main.py
+      - ./${LOCAL_APP_PATH}/poetry.lock:/${PATH_APP_IN_DOCKER}/poetry.lock
+      - ./${LOCAL_APP_PATH}/pyproject.toml:/${PATH_APP_IN_DOCKER}/pyproject.toml
+      - ./${LOCAL_APP_PATH}/README.md:/${PATH_APP_IN_DOCKER}/README.md
+      - training_app_alembic_versions:/${PATH_APP_IN_DOCKER}/${APP_NAME}/alembic/versions
+      - training_app_venv:/${PATH_APP_IN_DOCKER}/.venv
     ports:
       - 8000:8000
     depends_on:
       mssql_db:
         condition: service_healthy
+    networks:
+      - backend
   mssql_db:
     container_name: mssql_db
     hostname: ${DB_HOST}
@@ -31,7 +35,7 @@ services:
     env_file:
       - ./.env
     build:
-      context: ./backend/db/mssql/
+      context: ./${LOCAL_APP_PATH}/db/mssql/
       dockerfile: Dockerfile
     restart: always
     ports:
@@ -39,6 +43,8 @@ services:
     volumes:
       - ${DOCKER_DATA_PATH}/config_mssql.log:/opt/app/config.log
       - mssql_data:/var/opt/mssql/
+    networks:
+      - backend
     healthcheck:
           test:
               [
@@ -56,9 +62,20 @@ volumes:
       type: none
       # TODO: Need to create a file file fastapi_training_app/.docker_data/backend/.venv/
       device: ${DOCKER_DATA_PATH}/.venv/
+  training_app_alembic_versions:
+    driver_opts:
+      o: bind
+      type: none
+      # TODO: Need to create a file file fastapi_training_app/.docker_data/backend/alembic/versions/
+      device: ${DOCKER_DATA_PATH}/alembic/versions/
   mssql_data:
     driver_opts:
       o: bind
       type: none
       # TODO: Need to create a file fastapi_training_app/.docker_data/backend/mssql_data: sudo chown -R 10001:0 fastapi_training_app/.docker_data
       device: ${DOCKER_DATA_PATH}/mssql_data/
+
+networks:
+  backend:
+    name: backend
+    driver: bridge

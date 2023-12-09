@@ -1,5 +1,5 @@
-USE [master];
-GO
+-- USE [master];
+-- GO
 
 IF NOT EXISTS (SELECT * FROM sys.sql_logins WHERE name = '$(DB_USER)')
 BEGIN

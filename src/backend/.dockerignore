@@ -4,3 +4,5 @@ LICENSE
 .gitignore
 .github
 .venv
+__pycache__
+

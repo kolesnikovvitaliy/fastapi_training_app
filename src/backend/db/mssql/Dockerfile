@@ -5,9 +5,12 @@ ENV APP_DIR=/opt/app
 
 USER root
 
+RUN groupadd --gid 1000 userapp \
+    && useradd --uid 1000 --gid userapp --shell /bin/bash --create-home userapp
+
 RUN mkdir -p $APP_DIR
 WORKDIR $APP_DIR
-RUN touch config.log && chown mssql config.log
+RUN touch config.log && chown userapp config.log
 COPY ./scripts scripts
 COPY ./entrypoint.sh entrypoint.sh
 
