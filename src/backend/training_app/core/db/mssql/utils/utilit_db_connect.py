@@ -73,7 +73,7 @@ def create_string_connect_db_url(
     driver: Annotated[str, MinLen(5)] = "mssql+aioodbc",
     username: str = "",
     password: str = "",
-    host: Annotated[str, MinLen(7)] = "localhost",
+    host: Annotated[str, MinLen(3)] = "localhost",
     port: int = 1433,
     database: str = "",
     query: dict[str, str | bool] = None,
@@ -81,6 +81,11 @@ def create_string_connect_db_url(
     """
     Создание отформатированной строки подключения к базе данных.
     при подключении к MSSQL параметр query["driver"] - обязателен
+    пример:
+    query = {
+        driver": "ODBC Driver 18 for SQL Server",
+        "TrustServerCertificate": "yes",
+        "LongAsMax": "Yes"}
     """
     if "mssql" in driver and (query is None or len(query) == 0):
         raise KeysErrorInString("Missing required parameter 'driver'")

@@ -16,6 +16,7 @@ mssql_string_connect_db_url = create_string_connect_db_url(
     query={
         "driver": "ODBC Driver 18 for SQL Server",
         "TrustServerCertificate": "yes",
+        "LongAsMax": "Yes",
         # "authentication": "ActiveDirectoryIntegrated",
         "autocommit": False,
         "isolation_level": "AUTOCOMMIT",
