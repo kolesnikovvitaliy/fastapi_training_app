@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings
-from .utils.string_connect_db_url import REAL_MSSQL_DATABASE_URL
+from .utils.get_string_connect_db_url import REAL_MSSQL_DATABASE_URL
 
 
 class DBSettings(BaseModel):
