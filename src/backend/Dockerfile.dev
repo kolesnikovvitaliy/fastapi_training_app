@@ -98,7 +98,7 @@ WORKDIR $PYSETUP_PATH
 RUN poetry lock --no-update
 RUN poetry install --no-root --no-cache \
     && rm -rf ~/.cache/pypoetry/{cache,artifacts}
-COPY ./db db
+COPY ./backend_db backend_db
 COPY ./scripts scripts
 COPY ./training_app training_app
 COPY ./tests tests

@@ -12,7 +12,7 @@ services:
     restart: on-failure
     volumes:
       - ./${LOCAL_APP_PATH}/scripts:/${PATH_APP_IN_DOCKER}/scripts
-      - ./${LOCAL_APP_PATH}/db:/${PATH_APP_IN_DOCKER}/db
+      - ./${LOCAL_APP_PATH}/backend_db:/${PATH_APP_IN_DOCKER}/backend_db
       - ./${LOCAL_APP_PATH}/training_app:/${PATH_APP_IN_DOCKER}/training_app
       - ./${LOCAL_APP_PATH}/tests:/${PATH_APP_IN_DOCKER}/tests
       - ./${LOCAL_APP_PATH}/main.py:/${PATH_APP_IN_DOCKER}/main.py
