@@ -35,7 +35,7 @@ services:
     env_file:
       - ./.env
     build:
-      context: ./${LOCAL_APP_PATH}/db/mssql/
+      context: ./${LOCAL_APP_PATH}/backend_db/mssql/
       dockerfile: Dockerfile
     restart: always
     ports:
