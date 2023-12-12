@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from .api_v1.operations.views import router as router_operation
+from .v1.operations.views import router as router_operation
 
 
 router = APIRouter()

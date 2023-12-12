@@ -1,5 +1,6 @@
 import uuid
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+
 from ..core.models import User
 from fastapi_users import FastAPIUsers
 from .schemas import UserCreate, UserRead
@@ -24,3 +25,15 @@ router.include_router(
     fastapi_users.get_register_router(UserRead, UserCreate),
     prefix="/auth",
 )
+
+current_user = fastapi_users.current_user()
+
+
+@router.get("/protected-route")
+def protected_route(user: User = Depends(current_user)):
+    return f"Hello, {user.username}"
+
+
+@router.get("/unprotected-route")
+def unprotected_route():
+    return "Hello, anonym"
