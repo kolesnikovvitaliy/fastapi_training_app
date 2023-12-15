@@ -1,5 +1,10 @@
 version: "3.8"
 
+networks:
+  backend:
+    name: backend
+    driver: bridge
+
 services:
   training_app:
     container_name: training_app
@@ -12,7 +17,7 @@ services:
     restart: on-failure
     volumes:
       - ./${LOCAL_APP_PATH}/scripts:/${PATH_APP_IN_DOCKER}/scripts
-      - ./${LOCAL_APP_PATH}/backend_db:/${PATH_APP_IN_DOCKER}/backend_db
+      - ./${LOCAL_APP_PATH}/.docker:/${PATH_APP_IN_DOCKER}/.docker
       - ./${LOCAL_APP_PATH}/training_app:/${PATH_APP_IN_DOCKER}/training_app
       - ./${LOCAL_APP_PATH}/tests:/${PATH_APP_IN_DOCKER}/tests
       - ./${LOCAL_APP_PATH}/main.py:/${PATH_APP_IN_DOCKER}/main.py
@@ -26,6 +31,8 @@ services:
     depends_on:
       mssql_db:
         condition: service_healthy
+      redis_app:
+        condition: service_healthy
     networks:
       - backend
   mssql_db:
@@ -35,13 +42,13 @@ services:
     env_file:
       - ./.env
     build:
-      context: ./${LOCAL_APP_PATH}/backend_db/mssql/
+      context: ./${LOCAL_APP_PATH}/.docker/databases/mssql/
       dockerfile: Dockerfile
     restart: always
     ports:
       - ${DB_PORT}:1433
     volumes:
-      - ${DOCKER_DATA_PATH}/config_mssql.log:/opt/app/config.log
+      - ${DOCKER_DATA_PATH}/mssql_data/logs/mssql.log:/opt/app/config.log
       - mssql_data:/var/opt/mssql/
     networks:
       - backend
@@ -54,7 +61,29 @@ services:
           interval: 10s
           retries: 10
           start_period: 10s
+          timeout: 5s
+  redis_app:
+    container_name: redis_app
+    hostname: ${REDIS_HOST}
+    image: redis_app
+    env_file:
+      - ./.env
+    build:
+      context: ./${LOCAL_APP_PATH}/.docker/cache/redis/
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - ${REDIS_PORT}:6379
+    volumes:
+      - ${DOCKER_DATA_PATH}/redis_data/logs/redis-server.log:/var/log/redis/redis-server.log
+      - redis_data:/var/lib/redis
+    networks:
+      - backend
+    healthcheck:
+          test: ["CMD", "redis-cli", "ping"]
+          interval: 1s
           timeout: 3s
+          retries: 30
 volumes:
   training_app_venv:
     driver_opts:
@@ -67,15 +96,16 @@ volumes:
       o: bind
       type: none
       # TODO: Need to create a file file fastapi_training_app/.docker_data/backend/alembic/versions/
-      device: ${DOCKER_DATA_PATH}/alembic/versions/
+      device: ${DOCKER_DATA_PATH}/alembic_data/versions/
   mssql_data:
     driver_opts:
       o: bind
       type: none
-      # TODO: Need to create a file fastapi_training_app/.docker_data/backend/mssql_data: sudo chown -R 10001:0 fastapi_training_app/.docker_data
-      device: ${DOCKER_DATA_PATH}/mssql_data/
-
-networks:
-  backend:
-    name: backend
-    driver: bridge
+      # TODO: Need to create a file fastapi_training_app/.docker_data/backend/mssql_data/data: sudo chown -R 10001:0 fastapi_training_app/.docker_data
+      device: ${DOCKER_DATA_PATH}/mssql_data/data/
+  redis_data:
+    driver_opts:
+      o: bind
+      type: none
+      # TODO: Need to create a file fastapi_training_app/.docker_data/backend/redis_data/data: sudo chown -R 10001:0 fastapi_training_app/.docker_data
+      device: ${DOCKER_DATA_PATH}/redis_data/data/
