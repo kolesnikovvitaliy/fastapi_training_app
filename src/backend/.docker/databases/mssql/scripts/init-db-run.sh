@@ -23,7 +23,7 @@ fi
 
 
 echo "*********** Preparing SQL Server instance features: Contained databases " | tee -a $CONFIGLOG_PATH
-/opt/mssql-tools/bin/sqlcmd -S $DB_HOST -U sa -P $MSSQL_SA_PASSWORD -d master -i ./scripts/init-db.sql | tee -a $CONFIGLOG_PATH
-/opt/mssql-tools/bin/sqlcmd -S $DB_HOST -U $DB_USER -P $DB_PASSWORD -d $REAL_DB -i ./scripts/setup.instance.sql | tee -a $CONFIGLOG_PATH
+/opt/mssql-tools/bin/sqlcmd -S $DB_HOST -U sa -P $MSSQL_SA_PASSWORD -d master -i ./config/init-db.sql | tee -a $CONFIGLOG_PATH
+/opt/mssql-tools/bin/sqlcmd -S $DB_HOST -U $DB_USER -P $DB_PASSWORD -d $REAL_DB -i ./config/setup.instance.sql | tee -a $CONFIGLOG_PATH
 
 echo "======= MSSQL SERVER STARTED ========" | tee -a $CONFIGLOG_PATH

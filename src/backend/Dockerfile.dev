@@ -98,7 +98,7 @@ WORKDIR $PYSETUP_PATH
 RUN poetry lock --no-update
 RUN poetry install --no-root --no-cache \
     && rm -rf ~/.cache/pypoetry/{cache,artifacts}
-COPY ./backend_db backend_db
+COPY ./.docker .docker
 COPY ./scripts scripts
 COPY ./training_app training_app
 COPY ./tests tests
@@ -107,13 +107,14 @@ COPY ./__init__.py __init__.py
 COPY ./README.md README.md
 RUN chmod +x ./scripts/activate-venv.sh
 
-# Create USER for prod
-RUN groupadd --gid 1000 userapp \
-    && useradd --uid 1000 --gid userapp --shell /bin/bash --create-home userapp
+# # Create USER for prod
+# ######################################################################################
+# RUN groupadd --gid 1000 userapp \
+#     && useradd --uid 1000 --gid userapp --shell /bin/bash --create-home userapp
 
-RUN chown -R userapp:userapp $PYSETUP_PATH
-USER userapp
-
+# RUN chown -R userapp:userapp $PYSETUP_PATH
+# USER userapp
+# #######################################################################################
 EXPOSE 8000
 
 # start activate venv for training_app

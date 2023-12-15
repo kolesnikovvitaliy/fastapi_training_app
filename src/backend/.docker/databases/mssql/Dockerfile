@@ -12,13 +12,13 @@ RUN mkdir -p $APP_DIR
 WORKDIR $APP_DIR
 RUN touch config.log && chown userapp config.log
 COPY ./scripts scripts
-COPY ./entrypoint.sh entrypoint.sh
+COPY ./config config
 
 RUN chmod +x ./scripts/init-db-run.sh \
-    && chmod +x ./entrypoint.sh
+    && chmod +x ./scripts/entrypoint.sh
 
 EXPOSE 1433
 
 USER mssql
 
-CMD /bin/bash $APP_DIR/entrypoint.sh
+CMD /bin/bash $APP_DIR/scripts/entrypoint.sh
