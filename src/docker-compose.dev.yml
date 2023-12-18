@@ -31,7 +31,7 @@ services:
     depends_on:
       mssql_db:
         condition: service_healthy
-      redis_app:
+      redis_cache:
         condition: service_healthy
     networks:
       - backend
@@ -56,16 +56,16 @@ services:
           test:
               [
                   "CMD-SHELL",
-                  "/opt/mssql-tools/bin/sqlcmd -S ${DB_HOST} -U ${DB_USER} -P ${DB_PASSWORD} -Q 'SELECT 1' || exit 1"
+                  '/opt/mssql-tools/bin/sqlcmd -S "${DB_HOST}" -U "${DB_USER}" -P "${DB_PASSWORD}" -d "${TEST_DB}" -Q "SELECT \"READY\"" | grep -q "READY"'
               ]
           interval: 10s
-          retries: 10
+          retries: 33
           start_period: 10s
-          timeout: 5s
-  redis_app:
-    container_name: redis_app
+          timeout: 3s
+  redis_cache:
+    container_name: redis_cache
     hostname: ${REDIS_HOST}
-    image: redis_app
+    image: redis_cache
     env_file:
       - ./.env
     build:

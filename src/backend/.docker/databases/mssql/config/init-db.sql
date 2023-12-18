@@ -1,6 +1,3 @@
--- USE [master];
--- GO
-
 IF NOT EXISTS (SELECT * FROM sys.sql_logins WHERE name = '$(DB_USER)')
 BEGIN
     CREATE LOGIN [$(DB_USER)] WITH PASSWORD = '$(DB_PASSWORD)', CHECK_POLICY = OFF;
@@ -38,15 +35,5 @@ BEGIN
 END
 GO
 
-USE [master]
-GO
-
-GRANT ALL ON [$(REAL_DB)] TO [$(DB_USER)];
-GO
-GRANT ALL ON [$(TEST_DB)] TO [$(DB_USER)];
-GO
-
 USE [$(REAL_DB)]
 GO
--- EXECUTE AS USER = '$(NEW_USER)';  
--- GO
