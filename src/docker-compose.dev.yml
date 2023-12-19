@@ -6,6 +6,8 @@ networks:
     driver: bridge
 
 services:
+
+
   training_app:
     container_name: training_app
     image: training_app
@@ -31,10 +33,14 @@ services:
     depends_on:
       mssql_db:
         condition: service_healthy
-      redis_cache:
-        condition: service_healthy
+      # redis_cache:
+      #   condition: service_healthy
+      celery_worker:
+        condition: service_started
     networks:
       - backend
+
+
   mssql_db:
     container_name: mssql_db
     hostname: ${DB_HOST}
@@ -62,6 +68,8 @@ services:
           retries: 33
           start_period: 10s
           timeout: 3s
+
+
   redis_cache:
     container_name: redis_cache
     hostname: ${REDIS_HOST}
@@ -84,6 +92,81 @@ services:
           interval: 1s
           timeout: 3s
           retries: 30
+
+
+  rabbitmq_broker:
+    container_name: rabbitmq_broker
+    hostname: ${RABBITMQ_HOST}
+    image: rabbitmq_broker
+    env_file:
+      - ./.env
+    build:
+      context: ./${LOCAL_APP_PATH}/.docker/broker/rabbit_mq/
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - ${RABBITMQ_PORT_1}:5672
+      - ${RABBITMQ_PORT_2}:15672
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - backend
+    healthcheck:
+          test: rabbitmq-diagnostics -q status && rabbitmq-diagnostics -q check_local_alarms
+          interval: 30s
+          timeout: 30s
+          retries: 3
+
+
+  celery_worker:
+    container_name: celery_worker
+    hostname: ${CELERY_HOST}
+    image: celery_worker
+    env_file:
+      - ./.env
+    build:
+      context: ./${LOCAL_APP_PATH}/.docker/worker/celery/
+      dockerfile: Dockerfile
+    restart: always
+    volumes:
+      - ./${LOCAL_APP_PATH}/${APP_NAME}/celery:/celery
+    networks:
+      - backend
+    healthcheck:
+          test: celery -A celery.celery_app status
+          interval: 10s
+          timeout: 10s
+          retries: 10
+    depends_on:
+      rabbitmq_broker:
+        condition: service_healthy
+      redis_cache:
+        condition: service_healthy
+  
+
+  flower_celery:
+    container_name: flower_celery
+    hostname: ${FLOWER_CELERY_HOST}
+    image: flower_celery
+    env_file:
+      - ./.env
+    build:
+      context: ./${LOCAL_APP_PATH}/.docker/monitor/flower/
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - ${FLOWER_CELERY_PORT}:5555
+    volumes:
+      - ./${LOCAL_APP_PATH}/${APP_NAME}/celery:/celery
+    networks:
+      - backend
+    depends_on:
+      - rabbitmq_broker
+      - redis_cache
+      - celery_worker
+
+
+
 volumes:
   training_app_venv:
     driver_opts:
@@ -109,3 +192,9 @@ volumes:
       type: none
       # TODO: Need to create a file fastapi_training_app/.docker_data/backend/redis_data/data: sudo chown -R 10001:0 fastapi_training_app/.docker_data
       device: ${DOCKER_DATA_PATH}/redis_data/data/
+  rabbitmq_data:
+    driver_opts:
+      o: bind
+      type: none
+      # TODO: Need to create a file fastapi_training_app/.docker_data/backend/redis_data/data: sudo chown -R 10001:0 fastapi_training_app/.docker_data
+      device: ${DOCKER_DATA_PATH}/rabbitmq_data/

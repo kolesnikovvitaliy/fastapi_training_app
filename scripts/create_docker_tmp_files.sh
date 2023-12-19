@@ -14,6 +14,7 @@ else mkdir -p $DOCKER_DATA_BACKEND_PATH/backend \
         redis_data \
         redis_data/data \
         redis_data/logs \
+        rabbitmq_data \
         && touch ./mssql_data/logs/mssql.log \
         ./redis_data/logs/redis-server.log \
         && cd ../.. \
