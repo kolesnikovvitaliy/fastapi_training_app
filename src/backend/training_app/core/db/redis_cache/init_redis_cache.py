@@ -12,7 +12,7 @@ async def redis_cache() -> FastAPICache:
         host=f"{os.environ.get("REDIS_HOST")}",
         password=f"{os.environ.get("REDIS_PASSWORD")}",
         port=int(f"{os.environ.get("REDIS_PORT")}"),
-        db=0,
+        db=int(f"{os.environ.get("REDIS_STORE_DB_INDEX")}"),
     )
     redis_cache = redis.Redis(connection_pool=pool)
     FastAPICache.init(RedisBackend(redis_cache), prefix="fastapi-cache")

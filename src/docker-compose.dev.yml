@@ -129,11 +129,11 @@ services:
       dockerfile: Dockerfile
     restart: always
     volumes:
-      - ./${LOCAL_APP_PATH}/${APP_NAME}/celery:/celery
+      - ./${LOCAL_APP_PATH}/${APP_NAME}/celery_worker:/celery_worker
     networks:
       - backend
     healthcheck:
-          test: celery -A celery.celery_app status
+          test: celery -A celery_worker.app status
           interval: 10s
           timeout: 10s
           retries: 10
@@ -157,13 +157,12 @@ services:
     ports:
       - ${FLOWER_CELERY_PORT}:5555
     volumes:
-      - ./${LOCAL_APP_PATH}/${APP_NAME}/celery:/celery
+      - ./${LOCAL_APP_PATH}/${APP_NAME}/celery_worker:/celery_worker
     networks:
       - backend
     depends_on:
-      - rabbitmq_broker
-      - redis_cache
-      - celery_worker
+      celery_worker:
+          condition: service_healthy
 
 
 
