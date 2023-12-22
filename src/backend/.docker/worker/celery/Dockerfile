@@ -3,7 +3,8 @@ COPY requirements.txt .
 
 RUN pip3 install --no-cache-dir --upgrade pip && \
     pip3 install --no-cache-dir -r requirements.txt
+WORKDIR /
 
-WORKDIR /celery
-
-CMD celery --app app worker  -l info
+# CMD celery --app celery_worker.app worker  -l info
+# CMD celery -A celery_worker.app worker --loglevel=INFO --concurrency=4 -Q celery
+CMD celery -A celery_worker.worker worker --loglevel=INFO
