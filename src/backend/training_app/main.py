@@ -18,7 +18,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="Trading App", lifespan=lifespan)
+app = FastAPI(title="Training App", lifespan=lifespan)
 app.include_router(router=router_auth)
 app.include_router(router=router_v1, prefix=settings.api_v1_prefix)
 

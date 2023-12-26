@@ -7,4 +7,4 @@ WORKDIR /
 
 # CMD celery --app celery_worker.app worker  -l info
 # CMD celery -A celery_worker.app worker --loglevel=INFO --concurrency=4 -Q celery
-CMD celery -A celery_worker.worker worker --loglevel=INFO
+CMD celery -A celery_worker.app worker --loglevel=INFO
